@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soomario Trading Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1438 0%, #2d2550 50%, #3d3470 100%);
+            padding: 20px;
+            color: #e8d7c3;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(201, 151, 61, 0.1) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(212, 165, 116, 0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #d4a574 0%, #f4d291 50%, #c9973d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #d4a574;
+            font-weight: 500;
+        }
+
+        .main-chart-section {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.4) 0%, rgba(45, 37, 80, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            border: 2px solid rgba(212, 165, 116, 0.4);
+        }
+
+        .main-chart-section h2 {
+            font-size: 2em;
+            margin-bottom: 25px;
+            color: #d4a574;
+            text-align: center;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .leverage-selector {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.3) 0%, rgba(45, 37, 80, 0.3) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 2px solid rgba(212, 165, 116, 0.2);
+        }
+
+        .leverage-selector h2 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d4a574;
+        }
+
+        .leverage-warning {
+            background: rgba(255, 152, 0, 0.15);
+            border: 2px solid rgba(255, 152, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #ffb347;
+        }
+
+        .leverage-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .leverage-btn {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.5) 0%, rgba(45, 37, 80, 0.5) 100%);
+            border: 2px solid rgba(212, 165, 116, 0.3);
+            color: #d4a574;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .leverage-btn:hover {
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.2) 0%, rgba(201, 151, 61, 0.2) 100%);
+            border-color: rgba(212, 165, 116, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+        }
+
+        .leverage-btn.active {
+            background: linear-gradient(135deg, #d4a574 0%, #c9973d 100%);
+            border-color: #f4d291;
+            color: #1a1438;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.5);
+        }
+
+        .leverage-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .leverage-custom input {
+            width: 100px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 2px solid rgba(212, 165, 116, 0.3);
+            background: rgba(26, 20, 56, 0.5);
+            color: #d4a574;
+            font-size: 16px;
+        }
+
+        .bot-selector {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.3) 0%, rgba(45, 37, 80, 0.3) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 2px solid rgba(212, 165, 116, 0.2);
+        }
+
+        .bot-selector h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            color: #d4a574;
+        }
+
+        .bot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .bot-option {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.4) 0%, rgba(45, 37, 80, 0.4) 100%);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(212, 165, 116, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .bot-option:hover {
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.1) 0%, rgba(201, 151, 61, 0.1) 100%);
+            border-color: rgba(212, 165, 116, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .bot-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: #e8d7c3;
+        }
+
+        .bot-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #d4a574;
+        }
+
+        .bot-option input[type="number"] {
+            width: 100%;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 2px solid rgba(212, 165, 116, 0.3);
+            background: rgba(26, 20, 56, 0.5);
+            color: #d4a574;
+            font-size: 14px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.4) 0%, rgba(45, 37, 80, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            text-align: center;
+            transition: transform 0.3s ease;
+            border: 2px solid rgba(212, 165, 116, 0.2);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 165, 116, 0.4);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+
+        .metric-card.leveraged {
+            border: 2px solid rgba(255, 193, 7, 0.5);
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            color: #b8a08d;
+            margin-bottom: 10px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .metric-subvalue {
+            font-size: 0.8em;
+            color: #b8a08d;
+            margin-top: 5px;
+        }
+
+        .metric-value.positive {
+            color: #d4a574;
+        }
+
+        .metric-value.negative {
+            color: #ff8866;
+        }
+
+        .leverage-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 152, 0, 0.3) 100%);
+            border: 1px solid rgba(255, 193, 7, 0.6);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            margin-left: 5px;
+            color: #ffb347;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.3) 0%, rgba(45, 37, 80, 0.3) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            border: 2px solid rgba(212, 165, 116, 0.2);
+        }
+
+        .chart-container h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            color: #d4a574;
+        }
+
+        .bot-charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .trades-table {
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.3) 0%, rgba(45, 37, 80, 0.3) 100%);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow-x: auto;
+            border: 2px solid rgba(212, 165, 116, 0.2);
+        }
+
+        .trades-table h3 {
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            color: #d4a574;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+        }
+
+        th {
+            font-weight: 600;
+            background: linear-gradient(135deg, rgba(61, 52, 112, 0.4) 0%, rgba(45, 37, 80, 0.4) 100%);
+            color: #d4a574;
+        }
+
+        tr:hover {
+            background: rgba(212, 165, 116, 0.05);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #d4a574;
+        }
+
+        .error {
+            background: rgba(255, 102, 102, 0.2);
+            border: 2px solid #ff6666;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+            color: #ff8866;
+        }
+
+        button {
+            background: linear-gradient(135deg, #d4a574 0%, #c9973d 100%);
+            border: 2px solid #f4d291;
+            color: #1a1438;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, #f4d291 0%, #d4a574 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
+        }
+
+        .update-info {
+            text-align: center;
+            margin-top: 20px;
+            color: #b8a08d;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 1200px) {
+            .bot-charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 20, 56, 0.5);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #d4a574 0%, #c9973d 100%);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #f4d291 0%, #d4a574 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ SOOMARIO ⚙️</h1>
+            <p>Advanced Trading Performance Analytics</p>
+        </div>
+
+        <!-- MAIN CHART AT THE TOP -->
+        <div class="main-chart-section">
+            <h2>📈 TOTAL PORTFOLIO VALUE</h2>
+            <canvas id="combinedChart"></canvas>
+        </div>
+
+        <div class="leverage-selector">
+            <h2>⚡ Leverage Settings</h2>
+            <div class="leverage-buttons">
+                <button class="leverage-btn active" onclick="setLeverage(1)">1x (No Leverage)</button>
+                <button class="leverage-btn" onclick="setLeverage(2)">2x</button>
+                <button class="leverage-btn" onclick="setLeverage(3)">3x</button>
+                <button class="leverage-btn" onclick="setLeverage(5)">5x</button>
+                <button class="leverage-btn" onclick="setLeverage(10)">10x</button>
+                <button class="leverage-btn" onclick="setLeverage(20)">20x</button>
+                <button class="leverage-btn" onclick="setLeverage(50)">50x</button>
+                <button class="leverage-btn" onclick="setLeverage(100)">100x</button>
+            </div>
+            <div class="leverage-custom">
+                <label>Custom Leverage:</label>
+                <input type="number" id="customLeverage" placeholder="e.g., 15" min="1" max="200" step="0.5">
+                <button onclick="setCustomLeverage()">Apply</button>
+            </div>
+            <div class="leverage-warning" id="leverageWarning" style="display: none;">
+                ⚠️ <strong>Warning:</strong> Leverage amplifies both gains AND losses. Higher leverage = higher liquidation risk. With 10x leverage, a -10% drawdown would liquidate your position. Always use proper risk management!
+            </div>
+        </div>
+
+        <div class="bot-selector">
+            <h2>⚙️ Bot Selection & Investment</h2>
+            <div class="bot-grid" id="botGrid">
+                <!-- Bots will be populated here -->
+            </div>
+            <button onclick="updateDashboard()">Update Dashboard</button>
+        </div>
+
+        <div id="metricsContainer">
+            <div class="loading">⚙️ Loading dashboard data...</div>
+        </div>
+
+        <div class="update-info" id="updateInfo"></div>
+    </div>
+
+    <script>
+        // CONFIGURATION - Replace this URL with your Google Sheets JSON endpoint
+        const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbwsZ-3-FbGlwIwZaXGpesRZbK0LrxsUEps3e1syVJdJK37LstfYXuIyubBLt_69P9ho/exec';
+        
+        let allBotsData = {};
+        let selectedBots = new Set();
+        let investments = {};
+        let currentLeverage = 1;
+        let allCharts = [];
+
+        // Bot colors matching Soomario theme
+        const botColors = {
+            'CRV_OKX': '#d4a574',
+            'HYPE_OKX': '#f4d291',
+            'LINK_PIONEX': '#c9973d',
+            'LTC_PIONEX': '#e8d7c3',
+            'PUMPFUN_PIONEX': '#b8a08d'
+        };
+
+        // Set leverage
+        function setLeverage(leverage) {
+            currentLeverage = leverage;
+            
+            // Update button states
+            document.querySelectorAll('.leverage-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show/hide warning
+            const warning = document.getElementById('leverageWarning');
+            if (leverage > 1) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+            
+            // Update dashboard
+            if (Object.keys(allBotsData).length > 0) {
+                updateDashboard();
+            }
+        }
+
+        // Set custom leverage
+        function setCustomLeverage() {
+            const input = document.getElementById('customLeverage');
+            const leverage = parseFloat(input.value);
+            
+            if (leverage && leverage >= 1 && leverage <= 200) {
+                currentLeverage = leverage;
+                
+                // Update button states
+                document.querySelectorAll('.leverage-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Show warning
+                const warning = document.getElementById('leverageWarning');
+                warning.style.display = 'block';
+                
+                // Update dashboard
+                if (Object.keys(allBotsData).length > 0) {
+                    updateDashboard();
+                }
+            } else {
+                alert('Please enter a leverage between 1 and 200');
+            }
+        }
+
+        // Load data from Google Sheets
+        async function loadData() {
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL);
+                if (!response.ok) throw new Error('Failed to fetch data');
+                const data = await response.json();
+                allBotsData = data;
+                initializeBotSelector();
+                updateDashboard();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('metricsContainer').innerHTML = `
+                    <div class="error">
+                        <h3>⚠️ Error Loading Data</h3>
+                        <p>Please check your Google Sheets URL configuration.</p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize bot selector checkboxes
+        function initializeBotSelector() {
+            const botGrid = document.getElementById('botGrid');
+            botGrid.innerHTML = '';
+
+            Object.keys(allBotsData).forEach(botName => {
+                const botDiv = document.createElement('div');
+                botDiv.className = 'bot-option';
+                botDiv.innerHTML = `
+                    <label>
+                        <input type="checkbox" value="${botName}" onchange="toggleBot('${botName}')" checked>
+                        <span>${botName}</span>
+                    </label>
+                    <input type="number" 
+                           id="investment-${botName}" 
+                           placeholder="Initial investment ($)" 
+                           value="10000"
+                           min="0"
+                           step="100">
+                `;
+                botGrid.appendChild(botDiv);
+                
+                // Initialize as selected
+                selectedBots.add(botName);
+                investments[botName] = 10000;
+            });
+        }
+
+        // Toggle bot selection
+        function toggleBot(botName) {
+            if (selectedBots.has(botName)) {
+                selectedBots.delete(botName);
+            } else {
+                selectedBots.add(botName);
+            }
+        }
+
+        // Update investments from inputs
+        function updateInvestments() {
+            selectedBots.forEach(botName => {
+                const input = document.getElementById(`investment-${botName}`);
+                if (input) {
+                    investments[botName] = parseFloat(input.value) || 10000;
+                }
+            });
+        }
+
+        // Calculate metrics for selected bots
+        function calculateMetrics() {
+            updateInvestments();
+            
+            let totalInvestment = 0;
+            let totalReturn = 0;
+            let totalReturnLeveraged = 0;
+            let allTrades = [];
+            let worstDrawdown = 0;
+            let worstDrawdownLeveraged = 0;
+
+            selectedBots.forEach(botName => {
+                const botData = allBotsData[botName];
+                if (!botData || botData.length === 0) return;
+
+                const investment = investments[botName];
+                totalInvestment += investment;
+
+                // Get latest cumulative return
+                const latestTrade = botData[botData.length - 1];
+                const returnPercent = latestTrade.cumulative_pnl_percent / 100;
+                
+                // Calculate unleveraged and leveraged returns
+                const returnAmount = investment * returnPercent;
+                const returnAmountLeveraged = investment * (returnPercent * currentLeverage);
+                
+                totalReturn += returnAmount;
+                totalReturnLeveraged += returnAmountLeveraged;
+
+                // Add trades with bot name
+                botData.forEach(trade => {
+                    allTrades.push({
+                        ...trade,
+                        botName: botName,
+                        investment: investment
+                    });
+                });
+
+                // Track worst drawdown
+                botData.forEach(trade => {
+                    if (trade.cumulative_pnl_percent < worstDrawdown) {
+                        worstDrawdown = trade.cumulative_pnl_percent;
+                    }
+                });
+            });
+
+            // Calculate leveraged drawdown
+            worstDrawdownLeveraged = worstDrawdown * currentLeverage;
+
+            // Calculate win rate
+            const completedTrades = allTrades.filter(t => t.type.toLowerCase().includes('exit'));
+            const profitableTrades = completedTrades.filter(t => t.net_pnl_usdt > 0);
+            const winRate = completedTrades.length > 0 ? 
+                (profitableTrades.length / completedTrades.length) * 100 : 0;
+
+            // Calculate average win/loss
+            const avgWin = profitableTrades.length > 0 ?
+                profitableTrades.reduce((sum, t) => sum + t.net_pnl_usdt, 0) / profitableTrades.length : 0;
+            
+            const losingTrades = completedTrades.filter(t => t.net_pnl_usdt <= 0);
+            const avgLoss = losingTrades.length > 0 ?
+                losingTrades.reduce((sum, t) => sum + t.net_pnl_usdt, 0) / losingTrades.length : 0;
+
+            return {
+                totalInvestment,
+                totalReturn,
+                totalReturnLeveraged,
+                totalValue: totalInvestment + totalReturn,
+                totalValueLeveraged: totalInvestment + totalReturnLeveraged,
+                roiPercent: totalInvestment > 0 ? (totalReturn / totalInvestment) * 100 : 0,
+                roiPercentLeveraged: totalInvestment > 0 ? (totalReturnLeveraged / totalInvestment) * 100 : 0,
+                maxDrawdown: worstDrawdown,
+                maxDrawdownLeveraged: worstDrawdownLeveraged,
+                winRate,
+                totalTrades: completedTrades.length,
+                profitableTrades: profitableTrades.length,
+                avgWin,
+                avgLoss,
+                avgWinLeveraged: avgWin * currentLeverage,
+                avgLossLeveraged: avgLoss * currentLeverage,
+                allTrades: allTrades.sort((a, b) => new Date(a.datetime) - new Date(b.datetime))
+            };
+        }
+
+        // Update dashboard display
+        function updateDashboard() {
+            // Destroy old charts
+            allCharts.forEach(chart => chart.destroy());
+            allCharts = [];
+
+            if (selectedBots.size === 0) {
+                document.getElementById('metricsContainer').innerHTML = `
+                    <div class="error">
+                        <h3>⚠️ No Bots Selected</h3>
+                        <p>Please select at least one bot to view the dashboard.</p>
+                    </div>
+                `;
+                // Still draw empty main chart
+                drawCombinedPortfolio();
+                return;
+            }
+
+            const metrics = calculateMetrics();
+            const leverageBadge = currentLeverage > 1 ? `<span class="leverage-badge">${currentLeverage}x</span>` : '';
+
+            // Update metrics display
+            document.getElementById('metricsContainer').innerHTML = `
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Total Investment</div>
+                        <div class="metric-value">$${metrics.totalInvestment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">Current Value ${leverageBadge}</div>
+                        <div class="metric-value ${metrics.totalReturnLeveraged >= 0 ? 'positive' : 'negative'}">
+                            $${metrics.totalValueLeveraged.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: $${metrics.totalValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">Total Return ${leverageBadge}</div>
+                        <div class="metric-value ${metrics.totalReturnLeveraged >= 0 ? 'positive' : 'negative'}">
+                            $${metrics.totalReturnLeveraged.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: $${metrics.totalReturn.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>` : ''}
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">ROI % ${leverageBadge}</div>
+                        <div class="metric-value ${metrics.roiPercentLeveraged >= 0 ? 'positive' : 'negative'}">
+                            ${metrics.roiPercentLeveraged.toFixed(2)}%
+                        </div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: ${metrics.roiPercent.toFixed(2)}%</div>` : ''}
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">Max Drawdown ${leverageBadge}</div>
+                        <div class="metric-value negative">${metrics.maxDrawdownLeveraged.toFixed(2)}%</div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: ${metrics.maxDrawdown.toFixed(2)}%</div>` : ''}
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Win Rate</div>
+                        <div class="metric-value ${metrics.winRate >= 50 ? 'positive' : 'negative'}">
+                            ${metrics.winRate.toFixed(1)}%
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Trades</div>
+                        <div class="metric-value">${metrics.totalTrades}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Profitable Trades</div>
+                        <div class="metric-value positive">${metrics.profitableTrades}</div>
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">Avg Win ${leverageBadge}</div>
+                        <div class="metric-value positive">$${metrics.avgWinLeveraged.toFixed(2)}</div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: $${metrics.avgWin.toFixed(2)}</div>` : ''}
+                    </div>
+                    <div class="metric-card ${currentLeverage > 1 ? 'leveraged' : ''}">
+                        <div class="metric-label">Avg Loss ${leverageBadge}</div>
+                        <div class="metric-value negative">$${metrics.avgLossLeveraged.toFixed(2)}</div>
+                        ${currentLeverage > 1 ? `<div class="metric-subvalue">Unleveraged: $${metrics.avgLoss.toFixed(2)}</div>` : ''}
+                    </div>
+                </div>
+
+                <div class="bot-charts-grid" id="botChartsGrid">
+                </div>
+
+                <div class="trades-table">
+                    <h3>⚙️ Recent Trades (Last 20)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bot</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Signal</th>
+                                <th>P&L ${leverageBadge}</th>
+                                <th>P&L % ${leverageBadge}</th>
+                                <th>Cumulative % ${leverageBadge}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tradesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Draw combined portfolio chart (already at top)
+            drawCombinedPortfolio();
+
+            // Draw individual bot charts
+            drawIndividualBotCharts();
+
+            // Populate trades table
+            populateTradesTable(metrics.allTrades);
+
+            // Update last update info
+            document.getElementById('updateInfo').textContent = 
+                `Last updated: ${new Date().toLocaleString()} | Leverage: ${currentLeverage}x`;
+        }
+
+        // Draw combined portfolio value chart
+        function drawCombinedPortfolio() {
+            // Get all unique dates across all selected bots
+            let allDates = new Set();
+            let portfolioData = {};
+
+            selectedBots.forEach(botName => {
+                const botData = allBotsData[botName];
+                if (!botData || botData.length === 0) return;
+
+                const exitTrades = botData.filter(t => t.type.toLowerCase().includes('exit'));
+                
+                exitTrades.forEach(trade => {
+                    const date = new Date(trade.datetime).toISOString().split('T')[0];
+                    allDates.add(date);
+                });
+            });
+
+            // Sort dates
+            const sortedDates = Array.from(allDates).sort();
+
+            // Calculate portfolio value at each date
+            sortedDates.forEach(date => {
+                let portfolioValue = 0;
+
+                selectedBots.forEach(botName => {
+                    const botData = allBotsData[botName];
+                    if (!botData || botData.length === 0) return;
+
+                    const investment = investments[botName];
+                    const exitTrades = botData.filter(t => t.type.toLowerCase().includes('exit'));
+                    
+                    // Find the last trade on or before this date
+                    let cumulativeReturn = 0;
+                    for (let i = 0; i < exitTrades.length; i++) {
+                        const tradeDate = new Date(exitTrades[i].datetime).toISOString().split('T')[0];
+                        if (tradeDate <= date) {
+                            cumulativeReturn = exitTrades[i].cumulative_pnl_percent;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    const returnPercent = (cumulativeReturn / 100) * currentLeverage;
+                    const botValue = investment * (1 + returnPercent);
+                    portfolioValue += botValue;
+                });
+
+                portfolioData[date] = portfolioValue;
+            });
+
+            // Create chart data
+            const chartData = sortedDates.map(date => ({
+                x: date,
+                y: portfolioData[date]
+            }));
+
+            const ctx = document.getElementById('combinedChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: 'Total Portfolio Value',
+                        data: chartData,
+                        borderColor: '#d4a574',
+                        backgroundColor: 'rgba(212, 165, 116, 0.1)',
+                        borderWidth: 4,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#d4a574',
+                        pointBorderColor: '#f4d291',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 3,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#d4a574',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(26, 20, 56, 0.9)',
+                            titleColor: '#d4a574',
+                            bodyColor: '#e8d7c3',
+                            borderColor: '#d4a574',
+                            borderWidth: 2,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Value: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MMM dd'
+                                }
+                            },
+                            ticks: {
+                                color: '#d4a574',
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(212, 165, 116, 0.1)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: '#d4a574',
+                                font: {
+                                    size: 12
+                                },
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(212, 165, 116, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            allCharts.push(chart);
+        }
+
+        // Draw individual bot equity curves
+        function drawIndividualBotCharts() {
+            const gridContainer = document.getElementById('botChartsGrid');
+
+            selectedBots.forEach(botName => {
+                const botData = allBotsData[botName];
+                if (!botData || botData.length === 0) return;
+
+                // Create chart container
+                const chartDiv = document.createElement('div');
+                chartDiv.className = 'chart-container';
+                chartDiv.innerHTML = `
+                    <h3>⚙️ ${botName} ${currentLeverage > 1 ? `<span class="leverage-badge">${currentLeverage}x</span>` : ''}</h3>
+                    <canvas id="chart-${botName}"></canvas>
+                `;
+                gridContainer.appendChild(chartDiv);
+
+                // Get exit trades only
+                const exitTrades = botData.filter(t => t.type.toLowerCase().includes('exit'));
+                const investment = investments[botName];
+
+                // Create chart data with actual dates
+                const chartData = exitTrades.map(trade => {
+                    const returnPercent = (trade.cumulative_pnl_percent / 100) * currentLeverage;
+                    const value = investment * (1 + returnPercent);
+                    
+                    return {
+                        x: trade.datetime,
+                        y: value
+                    };
+                });
+
+                const ctx = document.getElementById(`chart-${botName}`).getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: botName,
+                            data: chartData,
+                            borderColor: botColors[botName] || '#d4a574',
+                            backgroundColor: (botColors[botName] || '#d4a574') + '20',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: botColors[botName] || '#d4a574',
+                            pointBorderColor: '#f4d291',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        aspectRatio: 2,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#d4a574',
+                                    font: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(26, 20, 56, 0.9)',
+                                titleColor: '#d4a574',
+                                bodyColor: '#e8d7c3',
+                                borderColor: '#d4a574',
+                                borderWidth: 2,
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Value: $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'MMM dd'
+                                    }
+                                },
+                                ticks: {
+                                    color: '#d4a574',
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                },
+                                grid: {
+                                    color: 'rgba(212, 165, 116, 0.1)'
+                                }
+                            },
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    color: '#d4a574',
+                                    callback: function(value) {
+                                        return '$' + value.toLocaleString();
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(212, 165, 116, 0.1)'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                allCharts.push(chart);
+            });
+        }
+
+        // Populate trades table with recent trades
+        function populateTradesTable(trades) {
+            const exitTrades = trades.filter(t => t.type.toLowerCase().includes('exit'));
+            const recentTrades = exitTrades.slice(-20).reverse();
+            
+            const tbody = document.getElementById('tradesTableBody');
+            tbody.innerHTML = recentTrades.map(trade => {
+                const pnlLeveraged = trade.net_pnl_usdt * currentLeverage;
+                const pnlPercentLeveraged = trade.net_pnl_percent * currentLeverage;
+                const cumulativePercentLeveraged = trade.cumulative_pnl_percent * currentLeverage;
+                
+                return `
+                <tr>
+                    <td>${trade.botName}</td>
+                    <td>${new Date(trade.datetime).toLocaleDateString()}</td>
+                    <td>${trade.type}</td>
+                    <td>${trade.signal}</td>
+                    <td style="color: ${pnlLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
+                        $${pnlLeveraged.toFixed(2)}
+                    </td>
+                    <td style="color: ${pnlPercentLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
+                        ${pnlPercentLeveraged.toFixed(2)}%
+                    </td>
+                    <td style="color: ${cumulativePercentLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
+                        ${cumulativePercentLeveraged.toFixed(2)}%
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        // Load data on page load
+        window.onload = loadData;
+    </script>
+</body>
+</html>
