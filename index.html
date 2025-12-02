@@ -549,11 +549,15 @@
             const investment = investments[botName];
             totalInvestment += investment;
 
+            // Sheet stores cumulative_pnl_percent as a decimal (0.0061 = 0.61%)
+            // so we use it directly as a return fraction.
             const latestTrade = botData[botData.length - 1];
-            const returnPercentDecimal = latestTrade.cumulative_pnl_percent / 100;  // convert % → decimal
-            
-            const returnAmount = investment * returnPercentDecimal;
-            const returnAmountLeveraged = investment * (returnPercentDecimal * currentLeverage);
+            const returnFraction = latestTrade.cumulative_pnl_percent; // e.g. 0.0061
+
+            // Calculate unleveraged and leveraged returns
+            const returnAmount = investment * returnFraction;
+            const returnAmountLeveraged = investment * (returnFraction * currentLeverage);
+
             
             totalReturn += returnAmount;
             totalReturnLeveraged += returnAmountLeveraged;
@@ -595,8 +599,8 @@
             totalValueLeveraged: totalInvestment + totalReturnLeveraged,
             roiPercent: totalInvestment > 0 ? (totalReturn / totalInvestment) * 100 : 0,
             roiPercentLeveraged: totalInvestment > 0 ? (totalReturnLeveraged / totalInvestment) * 100 : 0,
-            maxDrawdown: worstDrawdown,
-            maxDrawdownLeveraged: worstDrawdownLeveraged,
+            maxDrawdown: worstDrawdown * 100,                  // e.g. -0.2352 → -23.52
+            maxDrawdownLeveraged: worstDrawdownLeveraged * 100,
             winRate,
             totalTrades: completedTrades.length,
             profitableTrades: profitableTrades.length,
@@ -722,18 +726,18 @@
                 const investment = investments[botName];
                 const exitTrades = botData.filter(t => t.type.toLowerCase().includes('exit'));
                 
-                let cumulativeReturnPercent = 0;
+                let cumulativeReturnFraction = 0; // decimal: 0.0061 = 0.61%
                 for (let i = 0; i < exitTrades.length; i++) {
                     const tradeDate = new Date(exitTrades[i].datetime).toISOString().split('T')[0];
                     if (tradeDate <= date) {
-                        cumulativeReturnPercent = exitTrades[i].cumulative_pnl_percent;
+                        cumulativeReturnFraction = exitTrades[i].cumulative_pnl_percent;
                     } else {
                         break;
                     }
                 }
 
-                const cumulativeReturnDecimal = (cumulativeReturnPercent / 100) * currentLeverage;
-                const botValue = investment * (1 + cumulativeReturnDecimal);
+                const leveragedFraction = cumulativeReturnFraction * currentLeverage;
+                const botValue = investment * (1 + leveragedFraction);;
                 portfolioValue += botValue;
             });
 
