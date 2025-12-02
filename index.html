@@ -1068,7 +1068,8 @@
             tbody.innerHTML = recentTrades.map(trade => {
                 const pnlLeveraged = trade.net_pnl_usdt * currentLeverage;
                 const pnlPercentLeveraged = trade.net_pnl_percent * currentLeverage;
-                const cumulativePercentLeveraged = trade.cumulative_pnl_percent * currentLeverage;
+                const cumulativePercentLeveraged =
+                    trade.cumulative_pnl_percent * 100 * currentLeverage;
                 
                 return `
                 <tr>
