@@ -300,16 +300,6 @@
             margin-bottom: 30px;
         }
 
-        .trades-table {
-            background: linear-gradient(135deg, rgba(61, 52, 112, 0.3) 0%, rgba(45, 37, 80, 0.3) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            overflow-x: auto;
-            border: 2px solid rgba(212, 165, 116, 0.2);
-        }
-
         .trades-table h3 {
             margin-bottom: 20px;
             font-size: 1.3em;
@@ -762,25 +752,6 @@
 
                 <div class="bot-charts-grid" id="botChartsGrid">
                 </div>
-
-                <div class="trades-table">
-                    <h3>⚙️ Recent Trades (Last 20)</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Bot</th>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Signal</th>
-                                <th>P&L ${leverageBadge}</th>
-                                <th>P&L % ${leverageBadge}</th>
-                                <th>Cumulative % ${leverageBadge}</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tradesTableBody">
-                        </tbody>
-                    </table>
-                </div>
             `;
 
             // Draw combined portfolio chart (already at top)
@@ -788,9 +759,6 @@
 
             // Draw individual bot charts
             drawIndividualBotCharts();
-
-            // Populate trades table
-            populateTradesTable(metrics.allTrades);
 
             // Update last update info
             document.getElementById('updateInfo').textContent = 
@@ -1057,38 +1025,6 @@
 
                 allCharts.push(chart);
             });
-        }
-
-        // Populate trades table with recent trades
-        function populateTradesTable(trades) {
-            const exitTrades = trades.filter(t => t.type.toLowerCase().includes('exit'));
-            const recentTrades = exitTrades.slice(-20).reverse();
-            
-            const tbody = document.getElementById('tradesTableBody');
-            tbody.innerHTML = recentTrades.map(trade => {
-                const pnlLeveraged = trade.net_pnl_usdt * currentLeverage;
-                const pnlPercentLeveraged = trade.net_pnl_percent * currentLeverage;
-                const cumulativePercentLeveraged =
-                    trade.cumulative_pnl_percent * 100 * currentLeverage;
-                
-                return `
-                <tr>
-                    <td>${trade.botName}</td>
-                    <td>${new Date(trade.datetime).toLocaleDateString()}</td>
-                    <td>${trade.type}</td>
-                    <td>${trade.signal}</td>
-                    <td style="color: ${pnlLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
-                        $${pnlLeveraged.toFixed(2)}
-                    </td>
-                    <td style="color: ${pnlPercentLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
-                        ${pnlPercentLeveraged.toFixed(2)}%
-                    </td>
-                    <td style="color: ${cumulativePercentLeveraged >= 0 ? '#d4a574' : '#ff8866'}">
-                        ${cumulativePercentLeveraged.toFixed(2)}%
-                    </td>
-                </tr>
-            `;
-            }).join('');
         }
 
         // Load data on page load
